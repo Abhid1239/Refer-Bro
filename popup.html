@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Referral Bro</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+
+  <body>
+
+    <!-- Header -->
+    <div class="header">
+      <div class="logo-area">
+        <span class="logo-icon">🤝</span>
+        <h2>Referral Bro</h2>
+      </div>
+      <div class="switch-wrapper">
+        <label class="switch" title="Toggle Overlay Mode">
+          <input type="checkbox" id="overlay-toggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <!-- Data Management Card -->
+      <div class="card">
+        <div class="card-header">
+          <span class="label">Database</span>
+          <span id="last-updated" style="font-size:10px; color:#888;"></span>
+        </div>
+
+        <label for="csv-upload" class="file-upload-btn">
+          📂 Upload CSV File
+        </label>
+        <input type="file" id="csv-upload" accept=".csv">
+
+        <div id="status"></div>
+      </div>
+
+      <!-- Search Card -->
+      <div class="card">
+        <div class="card-header">
+          <span class="label">Manual Check</span>
+        </div>
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" class="search-input" placeholder="Search company (e.g., Google)">
+        </div>
+        <div id="search-results"></div>
+      </div>
+
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+
+</html>

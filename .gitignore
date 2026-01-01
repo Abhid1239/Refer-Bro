@@ -1,0 +1,13 @@
+# OS
+.DS_Store
+
+# Node
+node_modules/
+npm-debug.log
+
+# Extension
+*.pem
+manifest.json.bak
+
+# Local Data
+# keeping sample_referrals.csv for demo purposes, but usually data is ignored

@@ -1,0 +1,180 @@
+/* 
+   INJECTED ELEMENTS (Content Script)
+   Production-grade styling with scoped classes.
+*/
+
+/* --- Badge / Pill Button --- */
+.referral-radar-badge {
+  all: initial;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  
+  /* User Requested Gradient: Red to Blue */
+  background: linear-gradient(135deg, #F44336 0%, #2196F3 100%) !important;
+  color: white !important;
+  
+  border-radius: 20px !important;
+  padding: 4px 12px !important;
+  margin-left: 8px !important;
+  
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.2px !important;
+  
+  cursor: pointer !important;
+  z-index: 9999 !important;
+  box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3) !important;
+  vertical-align: middle !important;
+  line-height: normal !important;
+  
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease !important;
+  white-space: nowrap !important;
+  user-select: none !important;
+}
+
+.referral-radar-badge:hover {
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 6px 15px rgba(33, 150, 243, 0.4) !important;
+  filter: brightness(1.1) !important;
+}
+
+.referral-radar-badge .rr-icon {
+  font-size: 12px !important;
+  margin-right: 5px !important;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1)) !important;
+}
+
+.referral-radar-badge .rr-text {
+  font-family: inherit !important;
+}
+
+/* --- Tooltip / Popover --- */
+.referral-radar-tooltip {
+  position: absolute;
+  background: white;
+  
+  /* Glassmorphism-ish border */
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0,0,0,0.05);
+  border-radius: 12px;
+  
+  padding: 0; /* Content padding handled by children */
+  z-index: 2147483647 !important;
+  width: 300px;
+  
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: #1f2937;
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.5;
+  
+  animation: rr-pop-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+@keyframes rr-pop-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Header */
+.rr-tooltip-header {
+  padding: 14px 16px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rr-tooltip-header h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.01em;
+}
+
+.rr-close-btn {
+  cursor: pointer;
+  color: #9ca3af;
+  font-size: 18px;
+  line-height: 1;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.rr-close-btn:hover {
+  color: #4b5563;
+  background: #e5e7eb;
+}
+
+/* Content List */
+.rr-tooltip-content {
+  padding: 8px 0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.referral-radar-referrer {
+  padding: 10px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.15s;
+  display: flex;
+  flex-direction: column;
+}
+
+.referral-radar-referrer:last-child {
+  border-bottom: none;
+}
+
+.referral-radar-referrer:hover {
+  background: #f9fafb;
+}
+
+.rr-name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.rr-name {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.rr-note {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+/* Copy Button */
+.referral-radar-copy-btn {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background-color: rgba(33, 150, 243, 0.08); /* Light Blue Tint */
+  color: #2196F3;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  align-self: flex-start;
+  margin-top: 8px;
+}
+
+.referral-radar-copy-btn:hover {
+  background-color: rgba(33, 150, 243, 0.15);
+}
+
+.referral-radar-copy-btn.copied {
+  background-color: #10B981; /* Green */
+  color: white;
+}
