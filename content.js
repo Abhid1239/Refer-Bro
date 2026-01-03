@@ -93,11 +93,24 @@ function startObserving() {
 
 /**
  * Removes all injected elements and stops scanning.
+ * Properly cleans up observer and timers to prevent memory leaks.
  */
 function stopScanning() {
+    // Disconnect observer to stop watching for changes
+    if (observer) {
+        observer.disconnect();
+        observer = null;
+    }
+
+    // Clear any pending debounce timer
+    clearTimeout(debounceTimer);
+
+    // Remove all injected elements
     document.querySelectorAll(`.${CONFIG.BADGE_CLASS}`).forEach(el => el.remove());
     document.querySelectorAll(`.${CONFIG.TOOLTIP_CLASS}`).forEach(el => el.remove());
-    state.processedNodes = new WeakSet(); // Clear cache so we can re-inject if enabled
+
+    // Clear cache so we can re-inject if enabled
+    state.processedNodes = new WeakSet();
 }
 
 /**
@@ -136,7 +149,9 @@ function scanPage() {
                 for (const company of state.knownCompanies) {
                     if (company.length > 3 && cleanText.includes(company)) {
                         // Regex for word boundary check, e.g. "Google" matches "Google Cloud" but "Go" doesn't match "Google"
-                        const regex = new RegExp(`\\b${company}\\b`, 'i');
+                        // Escape special regex characters to prevent ReDoS attacks
+                        const escapedCompany = escapeRegex(company);
+                        const regex = new RegExp(`\\b${escapedCompany}\\b`, 'i');
                         if (regex.test(cleanText)) {
                             injectBadge(node, company);
                             break; // Stop after first match
@@ -322,3 +337,9 @@ function escapeHtml(text) {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
 }
+
+// Utility: Escape special regex characters to prevent ReDoS attacks
+function escapeRegex(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+

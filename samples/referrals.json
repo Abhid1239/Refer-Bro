@@ -1,0 +1,67 @@
+[
+    {
+        "name": "Alice Chen",
+        "companies": [
+            "Google",
+            "Waymo"
+        ],
+        "notes": "Ex-colleague from DeepMind"
+    },
+    {
+        "name": "Bob Smith",
+        "companies": [
+            "Meta",
+            "Instagram"
+        ],
+        "notes": "College friend, works in AI"
+    },
+    {
+        "name": "Charlie Davis",
+        "companies": [
+            "Amazon",
+            "AWS"
+        ],
+        "notes": "Met at a conference, SDE II"
+    },
+    {
+        "name": "Diana Evans",
+        "companies": [
+            "Apple",
+            "Google",
+            "AWS"
+        ],
+        "notes": "Former manager, now at Apple Park"
+    },
+    {
+        "name": "Ethan Hall",
+        "companies": [
+            "Netflix",
+            "Roku"
+        ],
+        "notes": "High school buddy, Senior Engineer"
+    },
+    {
+        "name": "Fiona Green",
+        "companies": [
+            "Microsoft",
+            "LinkedIn"
+        ],
+        "notes": "Cousin, works in Azure"
+    },
+    {
+        "name": "George King",
+        "companies": [
+            "Tesla",
+            "SpaceX"
+        ],
+        "notes": "Gym buddy, Battery team"
+    },
+    {
+        "name": "Hannah Lee",
+        "companies": [
+            "Airbnb",
+            "DoorDash"
+        ],
+        "notes": "Former roommate, Frontend Lead"
+    }
+]

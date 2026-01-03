@@ -178,3 +178,31 @@
   background-color: #10B981; /* Green */
   color: white;
 }
+
+/* Focus states for accessibility */
+.referral-radar-copy-btn:focus {
+  outline: 2px solid #2196F3;
+  outline-offset: 2px;
+}
+
+.referral-radar-badge:focus {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+.rr-close-btn:focus {
+  outline: 2px solid #2196F3;
+  outline-offset: 2px;
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .referral-radar-badge,
+  .referral-radar-tooltip,
+  .referral-radar-copy-btn,
+  .rr-close-btn {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
