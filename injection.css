@@ -10,6 +10,12 @@
   align-items: center !important;
   justify-content: center !important;
   
+  /* Prevent stretching in flex containers */
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
+  width: auto !important;
+  max-width: fit-content !important;
+  
   /* User Requested Gradient: Red to Blue */
   background: linear-gradient(135deg, #F44336 0%, #2196F3 100%) !important;
   color: white !important;

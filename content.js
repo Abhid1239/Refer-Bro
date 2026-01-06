@@ -147,18 +147,29 @@ function scanPage() {
             // 4. Checking Matches
             // Strategy A: Exact Match (High Confidence)
             if (state.knownCompanies.has(cleanText)) {
-                injectBadge(node, cleanText);
+                // Skip if a more specific inner element has the same company
+                if (!hasMoreSpecificDescendant(node, cleanText)) {
+                    injectBadge(node, cleanText);
+                }
             }
-            // Strategy B: Substring Match (Lower Confidence, requires length > 3 to avoid noise)
+            // Strategy B: Word Boundary Match (requires length > 3 to avoid noise)
             else {
                 for (const company of state.knownCompanies) {
+                    // Quick check first - skip if company not in text at all
                     if (company.length > 3 && cleanText.includes(company)) {
-                        // Regex for word boundary check, e.g. "Google" matches "Google Cloud" but "Go" doesn't match "Google"
-                        // Escape special regex characters to prevent ReDoS attacks
-                        const escapedCompany = RB_UTILS.escapeRegex(company);
-                        const regex = new RegExp(`\\b${escapedCompany}\\b`, 'i');
-                        if (regex.test(cleanText)) {
-                            injectBadge(node, company);
+                        // Word boundary check - "Amazon" matches "Amazon Web Services" 
+                        // but NOT "Amazonabc" or "MyAmazon"
+                        const beforeOk = cleanText.indexOf(company) === 0 ||
+                            !/[A-Z0-9]/.test(cleanText.charAt(cleanText.indexOf(company) - 1));
+                        const afterIndex = cleanText.indexOf(company) + company.length;
+                        const afterOk = afterIndex >= cleanText.length ||
+                            !/[A-Z0-9]/.test(cleanText.charAt(afterIndex));
+
+                        if (beforeOk && afterOk) {
+                            // Skip if a more specific inner element has the same company
+                            if (!hasMoreSpecificDescendant(node, company)) {
+                                injectBadge(node, company);
+                            }
                             break; // Stop after first match
                         }
                     }
@@ -170,10 +181,52 @@ function scanPage() {
         });
 
     } catch (err) {
-        console.error('[Referral Radar] Scan error:', err);
+        console.error('[Referral Bro] Scan error:', err);
     } finally {
         state.isScanning = false;
     }
+}
+
+/**
+ * Checks if any descendant (up to maxLevels deep) contains the same company name.
+ * If so, we should skip injecting badge on this element and let the more specific
+ * inner element handle it (prevents badges on large <a> blocks).
+ */
+function hasMoreSpecificDescendant(node, companyName, maxLevels = 3) {
+    const selectors = RB_CONFIG.COMPANY_SELECTORS.join(', ');
+
+    try {
+        // Find all potential company-containing descendants
+        const descendants = node.querySelectorAll(selectors);
+
+        for (const desc of descendants) {
+            // Skip the node itself
+            if (desc === node) continue;
+
+            // Check nesting level
+            let level = 0;
+            let parent = desc.parentElement;
+            while (parent && parent !== node && level < maxLevels) {
+                parent = parent.parentElement;
+                level++;
+            }
+            if (level >= maxLevels) continue;
+
+            // Check if this descendant contains the same company
+            const descText = desc.textContent.trim().toUpperCase()
+                .replace(RB_CONFIG.CLEAN_REGEX, '').trim();
+
+            if (descText.length >= 2 && descText.length <= 50) {
+                if (descText === companyName || descText.includes(companyName)) {
+                    return true; // Found a more specific descendant
+                }
+            }
+        }
+    } catch (e) {
+        // querySelectorAll might fail on some nodes
+    }
+
+    return false;
 }
 
 /**
