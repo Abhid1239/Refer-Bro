@@ -1,14 +1,17 @@
 # Referral Bro 🤝
 
-A Chrome Extension that bridges the gap between your personal network and job applications. It scans job boards and injects a "Handshake" badge whenever you view a job at a company where you have a known contact.
+A Chrome Extension that bridges the gap between your personal network and job applications. See **who you know** at every company—right when you need it.
 
 ## 🚀 Features
 
-- **Upload Your Network** — Import a simple CSV file with your contacts
-- **Smart Detection** — Automatically detects company names on the page
-- **Privacy First** — All data stored locally in your browser. No servers, no tracking
-- **Visual Cues** — See "💬 Refer Bros" badges next to company names
-- **Quick Look** — Click the badge to see contacts & copy names instantly
+- **📂 Import Your Network** — CSV or JSON file with contacts and their companies
+- **➕ Quick Add** — Add contacts directly from the popup
+- **📤 Export** — Download your database as CSV anytime
+- **🔍 Smart Detection** — Automatically detects company names on job boards
+- **💬 Visual Badges** — See "1 Refer Bro" badges next to matched companies
+- **📋 One-Click Copy** — Copy contact names instantly
+- **🔒 Privacy First** — All data stored locally. No servers, no tracking.
+- **🤖 AI Helper** — Built-in prompt to convert any contact list format
 
 ## 🌐 Supported Job Boards
 
@@ -20,28 +23,35 @@ A Chrome Extension that bridges the gap between your personal network and job ap
 
 ## 🛠 Installation
 
-1. Clone or download this repository
+### From Chrome Web Store
+1. Visit the [Chrome Web Store listing](#)
+2. Click **Add to Chrome**
+3. Import your contacts and start browsing jobs!
+
+### For Developers
+1. Clone this repository
 2. Open Chrome → `chrome://extensions`
 3. Enable **Developer Mode** (top right)
 4. Click **Load unpacked** → select project folder
+5. Reload any open job board tabs
 
 ## 📂 Data Format
 
 ### CSV Format (Recommended)
 
 ```csv
-Name, Companies, Notes
-Alice Chen, "Google, Meta", Ex-colleague from DeepMind
-Bob Smith, Microsoft, College friend
-Charlie Davis, "Amazon, AWS", Met at a conference
+Name,Companies,Notes
+Alice Chen,"Google, Meta",Ex-colleague from DeepMind
+Bob Smith,Microsoft,College friend
+Charlie Davis,"Amazon, AWS",Met at a conference
 ```
 
 **Rules:**
-- 3 columns: `Name`, `Companies`, `Notes`
+- 3 columns: `Name`, `Companies`, `Notes` (Notes optional)
 - Multiple companies? Wrap in quotes: `"Google, Meta"`
-- Header row is optional (auto-detected)
+- Header row is auto-detected
 
-### JSON Format (For Reference)
+### JSON Format
 
 ```json
 [
@@ -53,34 +63,56 @@ Charlie Davis, "Amazon, AWS", Met at a conference
 ]
 ```
 
+### 🤖 Don't have formatted data?
+
+Use the built-in AI prompt in the extension! Click **"🤖 Don't have CSV/JSON?"** to get a prompt that converts any format.
+
 > 📁 See the `/samples` folder for complete examples!
+
+## 🔐 Permissions
+
+Referral Bro requests **minimal permissions**:
+
+| Permission | Why |
+|------------|-----|
+| `storage` | Save your contacts locally in your browser |
+
+That's it! No scary permissions. Your data never leaves your browser.
 
 ## 🏗 Tech Stack
 
 - Manifest V3
-- Vanilla JavaScript
+- Vanilla JavaScript (no dependencies)
 - CSS3 (Scoped styling)
 
-## 📋 Files
+## 📋 Project Structure
 
 ```
-├── manifest.json      # Extension config
-├── background.js      # Service worker
-├── content.js         # Page scanner
-├── popup.html/js/css  # Extension popup
-├── injection.css      # Injected styles
-├── samples/           # Example data files
-│   ├── referrals.json
-│   ├── referrals_with_header.csv
-│   └── referrals_minimal.csv
-└── icons/             # Extension icons
+├── manifest.json       # Extension config
+├── shared.js           # Centralized constants
+├── utils.js            # Helper functions
+├── content.js          # Page scanner & badge injection
+├── popup.html/js/css   # Extension popup UI
+├── injection.css       # Injected badge/tooltip styles
+├── samples/            # Example data files
+└── icons/              # Extension icons
 ```
 
 ## 🔮 Roadmap
 
-See `product_roadmap.md` for upcoming features.
+See `ROADMAP.md` for upcoming features:
+- v1.1: Import mode selection (Replace vs Merge)
+- v1.2: Custom DM templates with copy button
+- v2.0: LinkedIn profile detection, auto-import
+
+## 🤝 Contributing
+
+Contributions welcome! Please open an issue first to discuss changes.
 
 ## 📄 License
 
 MIT
 
+---
+
+**Built with ❤️ for job seekers everywhere.**

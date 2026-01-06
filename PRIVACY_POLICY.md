@@ -1,26 +1,99 @@
 # Privacy Policy for Referral Bro
 
-**Effective Date:** 2026-01-01
+**Effective Date:** January 2026  
+**Last Updated:** January 2026
 
-## 1. Introduction
-Referral Bro ("we", "us", or "our") respects your privacy. This Privacy Policy explains how Referral Bro handles your data.
+## Summary
 
-## 2. Data Collection and Usage
-**Referral Bro does NOT collect, transmit, or store any personal data on external servers.**
+**Referral Bro does NOT collect, transmit, or store any personal data on external servers.** All your data stays on your device.
 
-- **Local Storage**: All data you upload (via CSV) is stored locally on your device using the Chrome Storage API (`chrome.storage.local`). This data never leaves your browser.
-- **Page Content**: The extension scans the text of web pages you visit (LinkedIn, Naukri) solely to identify company names that match your local database. This information is processed in real-time within your browser and is not logged or sent anywhere.
+---
 
-## 3. Permissions
-We request the following permissions for functionality only:
-- **Storage**: To save your contact list locally.
-- **Scripting/Host Permissions**: To inject the "Referral Badge" visual indicator onto supported job board websites.
+## 1. Data Collection
 
-## 4. Third-Party Sharing
-We do not share, sell, or disclose your data to any third parties, because we do not have access to it.
+### What We DON'T Collect
+- ❌ Personal information
+- ❌ Browsing history
+- ❌ Analytics or usage data
+- ❌ Cookies or tracking pixels
+- ❌ Any data sent to external servers
 
-## 5. Changes to This Policy
-We may update this policy from time to time. Validate the version number of the extension to see if significant changes have occurred.
+### What Stays on Your Device
+- ✅ Your uploaded contact list (CSV/JSON data)
+- ✅ Your overlay mode preference (on/off toggle)
+- ✅ Last updated timestamp
 
-## 6. Contact
-If you have questions about this policy, please contact us via the Chrome Web Store support page.
+All data is stored using Chrome's local storage API (`chrome.storage.local`) and never leaves your browser.
+
+---
+
+## 2. How the Extension Works
+
+1. **Page Scanning**: When you visit a supported job board (LinkedIn, Indeed, Glassdoor, Naukri, Wellfound), the extension scans text on the page to identify company names.
+
+2. **Local Matching**: Company names are matched against your locally stored contact database. This happens entirely within your browser.
+
+3. **Badge Display**: If a match is found, a visual badge is displayed next to the company name.
+
+**No data is transmitted externally during this process.**
+
+---
+
+## 3. Permissions Explained
+
+| Permission | Purpose |
+|------------|---------|
+| `storage` | Save your contact list locally in Chrome's storage |
+
+We request **only one permission** — the minimum needed for functionality.
+
+---
+
+## 4. Third-Party Services
+
+Referral Bro does **not**:
+- Use third-party analytics (no Google Analytics, Mixpanel, etc.)
+- Make external API calls
+- Load remote scripts
+- Share data with any third party
+
+---
+
+## 5. Data Security
+
+- All data is stored locally on your device
+- Data is accessible only through the extension
+- Uninstalling the extension removes all stored data
+
+---
+
+## 6. Your Rights
+
+You have full control over your data:
+- **Export**: Download your data anytime via the Export button
+- **Delete**: Clear all data by uninstalling the extension
+- **Modify**: Add or remove contacts through the popup
+
+---
+
+## 7. Children's Privacy
+
+Referral Bro does not knowingly collect data from children under 13.
+
+---
+
+## 8. Changes to This Policy
+
+We may update this policy occasionally. The "Last Updated" date at the top will reflect any changes.
+
+---
+
+## 9. Contact
+
+Questions about this privacy policy? Reach out via:
+- Chrome Web Store support page
+- GitHub Issues: [Repository Link]
+
+---
+
+**TL;DR: Your data stays on your device. We don't collect, track, or sell anything.**
