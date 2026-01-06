@@ -18,14 +18,15 @@ document.addEventListener('DOMContentLoaded', () => {
     addNotes: document.getElementById('add-notes'),
     addBtn: document.getElementById('add-contact-btn'),
     // Export button
-    exportBtn: document.getElementById('export-btn')
+    exportBtn: document.getElementById('export-btn'),
+    // Copy prompt button
+    copyPromptBtn: document.getElementById('copy-prompt-btn'),
+    aiPrompt: document.getElementById('ai-prompt')
   };
 
   // --- Utilities ---
 
   let searchDebounceTimer;
-  const SEARCH_DEBOUNCE_MS = 300;
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
   /**
    * Shows an in-page notification instead of blocking alerts.
@@ -97,13 +98,43 @@ document.addEventListener('DOMContentLoaded', () => {
     // Export
     elements.exportBtn.addEventListener('click', handleExport);
 
-    // Allow Enter key to submit Quick Add
+    // Copy AI Prompt (null check for element)
+    if (elements.copyPromptBtn) {
+      elements.copyPromptBtn.addEventListener('click', handleCopyPrompt);
+    }
+
+    // Allow Enter key to submit Quick Add from Name or Companies field
+    elements.addName.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleAddContact();
+    });
+    elements.addCompanies.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleAddContact();
+    });
     elements.addNotes.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') handleAddContact();
     });
   }
 
   // --- Handlers ---
+
+  /**
+   * Copies the AI conversion prompt to clipboard.
+   */
+  function handleCopyPrompt() {
+    if (!elements.aiPrompt) return;
+    const promptText = elements.aiPrompt.textContent;
+    navigator.clipboard.writeText(promptText).then(() => {
+      elements.copyPromptBtn.textContent = '✅ Copied!';
+      elements.copyPromptBtn.classList.add('copied');
+      setTimeout(() => {
+        elements.copyPromptBtn.textContent = '📋 Copy Prompt';
+        elements.copyPromptBtn.classList.remove('copied');
+      }, 2000);
+    }).catch((err) => {
+      console.error('[Referral Bro] Clipboard error:', err);
+      showNotification('Failed to copy to clipboard', true);
+    });
+  }
 
   function handleToggle() {
     const isChecked = elements.toggle.checked;
@@ -117,9 +148,8 @@ document.addEventListener('DOMContentLoaded', () => {
             chrome.tabs.sendMessage(tab.id, {
               action: 'UPDATE_MODE',
               mode: isChecked
-            }).catch((error) => {
-              // Content script not loaded yet - this is expected on page reload
-              console.log(`[Referral Bro] Tab ${tab.id} not ready:`, error.message);
+            }).catch(() => {
+              // Silently ignore - content script not loaded yet (expected behavior)
             });
           }
         });
@@ -131,16 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
    * Checks if the URL is a supported job board where content script runs.
    */
   function isSupportedUrl(url) {
-    const supportedPatterns = [
-      'https://www.linkedin.com/',
-      'https://www.naukri.com/',
-      'https://www.indeed.com/',
-      'https://www.glassdoor.com/',
-      'https://www.glassdoor.co.in/',
-      'https://wellfound.com/',
-      'https://angel.co/'
-    ];
-    return supportedPatterns.some(pattern => url.startsWith(pattern));
+    return RB_UTILS.isSupportedUrl(url);
   }
 
   /**
@@ -267,12 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
    * Escapes a field for CSV format.
    */
   function escapeCSVField(field) {
-    if (!field) return '';
-    // If contains comma, quote, or newline, wrap in quotes and escape internal quotes
-    if (field.includes(',') || field.includes('"') || field.includes('\n')) {
-      return `"${field.replace(/"/g, '""')}"`;
-    }
-    return field;
+    return RB_UTILS.escapeCSVField(field);
   }
 
   function handleFileUpload(e) {
@@ -280,18 +296,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!file) return;
 
     const fileName = file.name.toLowerCase();
-    const validExtensions = ['.csv', '.json', '.xls', '.xlsx'];
+    const validExtensions = ['.csv', '.json'];
     const extension = validExtensions.find(ext => fileName.endsWith(ext));
 
     // Validate file type
     if (!extension) {
-      showNotification('Please upload a CSV, JSON, or Excel file', true);
+      showNotification('Please upload a CSV or JSON file', true);
       elements.fileInput.value = '';
       return;
     }
 
     // Validate file size (max 5MB)
-    if (file.size > MAX_FILE_SIZE) {
+    if (file.size > RB_CONFIG.MAX_FILE_SIZE) {
       showNotification('File too large. Maximum size is 5MB.', true);
       elements.fileInput.value = '';
       return;
@@ -307,8 +323,6 @@ document.addEventListener('DOMContentLoaded', () => {
           database = parseCSV(event.target.result);
         } else if (extension === '.json') {
           database = parseJSON(event.target.result);
-        } else if (extension === '.xls' || extension === '.xlsx') {
-          database = parseExcel(event.target.result);
         }
 
         if (!database || Object.keys(database).length === 0) {
@@ -327,12 +341,10 @@ document.addEventListener('DOMContentLoaded', () => {
       showNotification('Failed to read file', true);
     };
 
-    // Read as appropriate format
-    if (extension === '.xls' || extension === '.xlsx') {
-      reader.readAsArrayBuffer(file);
-    } else {
-      reader.readAsText(file);
-    }
+    reader.readAsText(file);
+
+    // Reset file input to allow re-uploading the same file
+    elements.fileInput.value = '';
   }
 
   /**
@@ -371,64 +383,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return database;
   }
 
-  /**
-   * Parses Excel (XLS/XLSX) content into database format.
-   * Uses SheetJS library.
-   */
-  function parseExcel(arrayBuffer) {
-    if (typeof XLSX === 'undefined') {
-      throw new Error('Excel parser not loaded. Please refresh and try again.');
-    }
-
-    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-    const firstSheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[firstSheetName];
-
-    // Convert to JSON array
-    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-    if (rows.length === 0) {
-      throw new Error('Excel file is empty');
-    }
-
-    const database = {};
-    let startIndex = 0;
-
-    // Detect header row
-    const firstRow = rows[0];
-    if (firstRow && firstRow.length > 0) {
-      const firstCell = String(firstRow[0] || '').toLowerCase();
-      if (firstCell.includes('name')) {
-        startIndex = 1;
-      }
-    }
-
-    for (let i = startIndex; i < rows.length; i++) {
-      const row = rows[i];
-      if (!row || row.length < 2) continue;
-
-      const name = String(row[0] || '').trim();
-      const companiesStr = String(row[1] || '').trim();
-      const notes = String(row[2] || '').trim();
-
-      if (!name || !companiesStr) continue;
-
-      const companies = companiesStr.split(',').map(c => c.trim().toUpperCase());
-
-      companies.forEach(company => {
-        const cleanCompany = company.replace(/[\"']/g, '');
-        if (!cleanCompany) return;
-
-        if (!database[cleanCompany]) {
-          database[cleanCompany] = [];
-        }
-        database[cleanCompany].push({ name, note: notes });
-      });
-    }
-
-    return database;
-  }
-
   function handleSearch(e) {
     const query = e.target.value.trim().toUpperCase();
 
@@ -449,7 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
         );
         renderSearchResults(matches, data);
       });
-    }, SEARCH_DEBOUNCE_MS);
+    }, RB_CONFIG.SEARCH_DEBOUNCE_MS);
   }
 
   // --- Logic ---
@@ -567,25 +521,14 @@ document.addEventListener('DOMContentLoaded', () => {
       let html = `<div class="result-company">${company}</div>`;
       referrers.forEach(ref => {
         html += `
-                <div class="result-person">👤 ${escapeHtml(ref.name)}</div>
-                <div class="result-note">${escapeHtml(ref.note)}</div>
+                <div class="result-person">👤 ${RB_UTILS.escapeHtml(ref.name)}</div>
+                <div class="result-note">${RB_UTILS.escapeHtml(ref.note)}</div>
               `;
       });
 
       item.innerHTML = html;
       elements.searchResults.appendChild(item);
     });
-  }
-
-  // Security Utility
-  function escapeHtml(text) {
-    if (!text) return '';
-    return text
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
   }
 
   // Start

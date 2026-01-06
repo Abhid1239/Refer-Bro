@@ -4,18 +4,7 @@
   "version": "1.0",
   "description": "Overlay referral contacts on job boards.",
   "permissions": [
-    "storage",
-    "activeTab",
-    "scripting"
-  ],
-  "host_permissions": [
-    "https://www.linkedin.com/*",
-    "https://www.naukri.com/*",
-    "https://www.indeed.com/*",
-    "https://www.glassdoor.com/*",
-    "https://www.glassdoor.co.in/*",
-    "https://wellfound.com/*",
-    "https://angel.co/*"
+    "storage"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -24,9 +13,6 @@
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     }
-  },
-  "background": {
-    "service_worker": "background.js"
   },
   "content_scripts": [
     {
@@ -40,6 +26,8 @@
         "https://angel.co/*"
       ],
       "js": [
+        "shared.js",
+        "utils.js",
         "content.js"
       ],
       "css": [

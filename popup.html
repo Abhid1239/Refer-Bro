@@ -5,8 +5,6 @@
     <meta charset="UTF-8">
     <title>Referral Bro</title>
     <link rel="stylesheet" href="popup.css">
-    <!-- SheetJS for Excel file parsing -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.mini.min.js"></script>
   </head>
 
   <body>
@@ -38,7 +36,7 @@
           <label for="csv-upload" class="file-upload-btn compact">
             📂 Import
           </label>
-          <input type="file" id="csv-upload" accept=".csv,.json,.xls,.xlsx">
+          <input type="file" id="csv-upload" accept=".csv,.json">
 
           <button id="export-btn" class="export-btn" title="Export as CSV">
             📤 Export
@@ -46,6 +44,7 @@
         </div>
 
         <div id="status"></div>
+        <p class="reload-hint">💡 Reload job pages to see new badges</p>
 
         <!-- Format Info -->
         <details class="format-info">
@@ -55,13 +54,21 @@
             <code>Name, "Company1, Company2", Notes</code>
 
             <p><strong>JSON:</strong></p>
-            <code>[{"name": "Alice", "companies": ["Google"], "notes": "..."}]</code>
+            <code>[{"name": "Alice", "companies": ["Google"]}]</code>
 
-            <p><strong>XLS/XLSX:</strong></p>
-            <code>Columns: Name | Companies | Notes</code>
+            <p class="format-note">💡 Notes field is optional</p>
+          </div>
+        </details>
+        <!-- AI Conversion Prompt -->
+        <details class="format-info no-margin">
+          <summary>🤖 Don't have CSV/JSON? Use AI to convert</summary>
+          <div class="format-content">
+            <div class="prompt-box" id="ai-prompt">Convert my contact list to CSV: Name, Companies, Notes. Multiple
+              companies = comma-separated in quotes. Notes optional. Output CSV only.
 
-            <p class="format-link">📖 <a href="https://github.com/user/referral-bro#data-format" target="_blank">Full
-                Guide & AI Prompts</a></p>
+              My data:
+              [PASTE HERE]</div>
+            <button class="copy-btn" id="copy-prompt-btn">📋 Copy Prompt</button>
           </div>
         </details>
       </div>
@@ -73,12 +80,14 @@
         </div>
 
         <div class="quick-add-form">
-          <input type="text" id="add-name" class="input-field" placeholder="Name (e.g., Alice Chen)"
-            aria-label="Contact name">
+          <div class="input-row">
+            <input type="text" id="add-name" class="input-field" placeholder="Name" aria-label="Contact name">
+            <input type="text" id="add-notes" class="input-field input-small" placeholder="Notes (optional)"
+              aria-label="Notes">
+          </div>
           <input type="text" id="add-companies" class="input-field" placeholder="Companies (comma separated)"
             aria-label="Companies">
-          <input type="text" id="add-notes" class="input-field" placeholder="Notes (optional)" aria-label="Notes">
-          <button id="add-contact-btn" class="add-btn">➕ Add Contact</button>
+          <button id="add-contact-btn" class="add-btn">➕ Add</button>
         </div>
       </div>
 
@@ -97,6 +106,8 @@
 
     </div>
 
+    <script src="shared.js"></script>
+    <script src="utils.js"></script>
     <script src="popup.js"></script>
   </body>
 

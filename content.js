@@ -1,19 +1,11 @@
 /**
- * Referral Radar Content Script
+ * Referral Bro Content Script
  * ------------------------------
  * Scans page DOM for company names matches and injects referral badges.
  * Features: Heuristic scanning, infinite scroll support, CSS-only tooltip.
+ * 
+ * Dependencies: shared.js, utils.js (loaded before this file)
  */
-
-// --- Constants & Config ---
-const CONFIG = {
-    BADGE_CLASS: 'referral-radar-badge',
-    TOOLTIP_CLASS: 'referral-radar-tooltip',
-    INJECTED_ATTR: 'data-rr-injected',
-    DEBOUNCE_MS: 800,
-    IGNORE_TAGS: ['SCRIPT', 'STYLE', 'NOSCRIPT', 'IFRAME'],
-    CLEAN_REGEX: /(Inc\.|Ltd\.|Pvt\.|LLC|Corporation|Corp\.|Group|Technology|Technologies|Solutions)/gi
-};
 
 // --- State ---
 let state = {
@@ -62,6 +54,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
+// Listen for storage changes to sync data updates
+chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName === 'local' && changes.referralData) {
+        state.referralData = changes.referralData.newValue || {};
+        state.knownCompanies = new Set(Object.keys(state.referralData));
+        // Re-scan with updated data
+        state.processedNodes = new WeakSet();
+        if (state.overlayMode) {
+            scanPage();
+        }
+    }
+});
+
 // Start
 init();
 
@@ -81,7 +86,7 @@ function startObserving() {
 
         // Debounce scan calls
         clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(scanPage, CONFIG.DEBOUNCE_MS);
+        debounceTimer = setTimeout(scanPage, RB_CONFIG.DEBOUNCE_MS);
     });
 
     observer.observe(document.body, {
@@ -106,8 +111,8 @@ function stopScanning() {
     clearTimeout(debounceTimer);
 
     // Remove all injected elements
-    document.querySelectorAll(`.${CONFIG.BADGE_CLASS}`).forEach(el => el.remove());
-    document.querySelectorAll(`.${CONFIG.TOOLTIP_CLASS}`).forEach(el => el.remove());
+    document.querySelectorAll(`.${RB_CONFIG.BADGE_CLASS}`).forEach(el => el.remove());
+    document.querySelectorAll(`.${RB_CONFIG.TOOLTIP_CLASS}`).forEach(el => el.remove());
 
     // Clear cache so we can re-inject if enabled
     state.processedNodes = new WeakSet();
@@ -122,14 +127,14 @@ function scanPage() {
 
     try {
         // Select potential elements that might contain company names.
-        // Focusing on headings and links improves performance vs scanning all text nodes.
-        const candidates = document.querySelectorAll('h1, h2, h3, h4, h5, a, strong, .company-name, [class*="company"]');
+        // Site-specific selectors for better detection
+        const candidates = document.querySelectorAll(RB_CONFIG.COMPANY_SELECTORS.join(', '));
 
         candidates.forEach(node => {
             // 1. Skip if already processed or invalid
             if (state.processedNodes.has(node)) return;
-            if (node.hasAttribute(CONFIG.INJECTED_ATTR)) return;
-            if (CONFIG.IGNORE_TAGS.includes(node.tagName)) return;
+            if (node.hasAttribute(RB_CONFIG.INJECTED_ATTR)) return;
+            if (RB_CONFIG.IGNORE_TAGS.includes(node.tagName)) return;
 
             const rawText = node.textContent.trim();
 
@@ -137,7 +142,7 @@ function scanPage() {
             if (!rawText || rawText.length < 2 || rawText.length > 50) return;
 
             // 3. Normalize Text
-            const cleanText = rawText.replace(CONFIG.CLEAN_REGEX, '').trim().toUpperCase();
+            const cleanText = rawText.replace(RB_CONFIG.CLEAN_REGEX, '').trim().toUpperCase();
 
             // 4. Checking Matches
             // Strategy A: Exact Match (High Confidence)
@@ -150,7 +155,7 @@ function scanPage() {
                     if (company.length > 3 && cleanText.includes(company)) {
                         // Regex for word boundary check, e.g. "Google" matches "Google Cloud" but "Go" doesn't match "Google"
                         // Escape special regex characters to prevent ReDoS attacks
-                        const escapedCompany = escapeRegex(company);
+                        const escapedCompany = RB_UTILS.escapeRegex(company);
                         const regex = new RegExp(`\\b${escapedCompany}\\b`, 'i');
                         if (regex.test(cleanText)) {
                             injectBadge(node, company);
@@ -181,7 +186,7 @@ function injectBadge(targetNode, companyName) {
     if (targetNode.dataset.rrInjected === 'true') return;
 
     // Check sibling to avoid visual duplicates
-    if (targetNode.nextElementSibling && targetNode.nextElementSibling.classList.contains(CONFIG.BADGE_CLASS)) {
+    if (targetNode.nextElementSibling && targetNode.nextElementSibling.classList.contains(RB_CONFIG.BADGE_CLASS)) {
         targetNode.dataset.rrInjected = 'true';
         return;
     }
@@ -191,11 +196,11 @@ function injectBadge(targetNode, companyName) {
 
     // Mark Injected
     targetNode.dataset.rrInjected = 'true';
-    targetNode.setAttribute(CONFIG.INJECTED_ATTR, 'true');
+    targetNode.setAttribute(RB_CONFIG.INJECTED_ATTR, 'true');
 
     // Create Badge
     const badge = document.createElement('span');
-    badge.className = CONFIG.BADGE_CLASS;
+    badge.className = RB_CONFIG.BADGE_CLASS;
     // UI: Chat icon + Count
     const countLabel = referrers.length === 1 ? '1 Refer Bro' : `${referrers.length} Refer Bros`;
     badge.innerHTML = `<span class="rr-icon">💬</span> <span class="rr-text">${countLabel}</span>`;
@@ -210,10 +215,15 @@ function injectBadge(targetNode, companyName) {
 
     // Insertion Logic
     // Insert AFTER the element to avoid breaking its internal layout (e.g. inside an <a>)
-    if (targetNode.tagName === 'A' || targetNode.parentNode.style.display === 'flex') {
-        targetNode.insertAdjacentElement('afterend', badge);
-    } else {
-        targetNode.appendChild(badge);
+    try {
+        const parent = targetNode.parentNode;
+        if (targetNode.tagName === 'A' || (parent && parent.style && parent.style.display === 'flex')) {
+            targetNode.insertAdjacentElement('afterend', badge);
+        } else {
+            targetNode.appendChild(badge);
+        }
+    } catch (insertError) {
+        console.warn('[Referral Bro] Badge insertion failed:', insertError.message);
     }
 }
 
@@ -232,16 +242,16 @@ function toggleTooltip(event, companyName, referrers) {
     }
 
     const tooltip = document.createElement('div');
-    tooltip.className = CONFIG.TOOLTIP_CLASS;
+    tooltip.className = RB_CONFIG.TOOLTIP_CLASS;
 
     // Build Content
     const listItems = referrers.map(ref => `
     <div class="referral-radar-referrer">
       <div class="rr-name-row">
-        <span class="rr-name">${escapeHtml(ref.name)}</span>
+        <span class="rr-name">${RB_UTILS.escapeHtml(ref.name)}</span>
       </div>
-      <div class="rr-note">${escapeHtml(ref.note)}</div>
-      <button class="referral-radar-copy-btn" data-name="${escapeHtml(ref.name)}">Copy Name</button>
+      <div class="rr-note">${RB_UTILS.escapeHtml(ref.note)}</div>
+      <button class="referral-radar-copy-btn" data-name="${RB_UTILS.escapeHtml(ref.name)}">Copy Name</button>
     </div>
   `).join('');
 
@@ -303,6 +313,8 @@ function toggleTooltip(event, companyName, referrers) {
 
 function handleCopy(e) {
     const name = e.target.getAttribute('data-name');
+    if (!name) return;
+
     navigator.clipboard.writeText(name).then(() => {
         e.target.textContent = 'Copied!';
         e.target.classList.add('copied');
@@ -310,6 +322,12 @@ function handleCopy(e) {
             e.target.textContent = 'Copy Name';
             e.target.classList.remove('copied');
         }, 2000);
+    }).catch((err) => {
+        console.warn('[Referral Bro] Copy failed:', err.message);
+        e.target.textContent = 'Failed';
+        setTimeout(() => {
+            e.target.textContent = 'Copy Name';
+        }, 1500);
     });
 }
 
@@ -322,24 +340,7 @@ function closeTooltip() {
 }
 
 function closeOutside(e) {
-    if (activeTooltip && !activeTooltip.contains(e.target) && !e.target.classList.contains(CONFIG.BADGE_CLASS)) {
+    if (activeTooltip && !activeTooltip.contains(e.target) && !e.target.classList.contains(RB_CONFIG.BADGE_CLASS)) {
         closeTooltip();
     }
 }
-
-// Utility: XSS Prevention
-function escapeHtml(text) {
-    if (!text) return '';
-    return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
-
-// Utility: Escape special regex characters to prevent ReDoS attacks
-function escapeRegex(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
