@@ -58,8 +58,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Initialization ---
 
+  // --- Tab Logic ---
+
+  function initTabs() {
+    const tabs = document.querySelectorAll('.tab-btn');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Deactivate all
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+        // Activate clicked
+        tab.classList.add('active');
+        const targetId = tab.dataset.tab;
+        document.getElementById(targetId).classList.add('active');
+      });
+    });
+  }
+
+  // --- Template Logic ---
+
+  function loadTemplates() {
+    chrome.storage.local.get([RB_CONSTANTS.STORAGE.TEMPLATES], (result) => {
+      // Use stored templates or fallback to defaults from constants
+      const templates = result[RB_CONSTANTS.STORAGE.TEMPLATES] || RB_CONSTANTS.TEMPLATES;
+
+      document.getElementById('tpl-referral').value = templates.REFERRAL;
+      document.getElementById('tpl-interview').value = templates.INTERVIEW;
+    });
+  }
+
+  function saveTemplates() {
+    const referralTpl = document.getElementById('tpl-referral').value.trim();
+    const interviewTpl = document.getElementById('tpl-interview').value.trim();
+
+    const newTemplates = {
+      REFERRAL: referralTpl,
+      INTERVIEW: interviewTpl
+    };
+
+    chrome.storage.local.set({
+      [RB_CONSTANTS.STORAGE.TEMPLATES]: newTemplates
+    }, () => {
+      const btn = document.getElementById('save-templates-btn');
+      const originalText = btn.textContent;
+      btn.textContent = '✅ Saved!';
+      setTimeout(() => btn.textContent = originalText, 2000);
+    });
+  }
+
+  // --- Initialization Update ---
+
   function init() {
     loadState();
+    loadTemplates(); // Load templates
+    initTabs();      // Init tabs
     attachListeners();
   }
 
@@ -110,6 +163,12 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.addCompanies.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') handleAddContact();
     });
+    // Save Templates
+    const saveTplBtn = document.getElementById('save-templates-btn');
+    if (saveTplBtn) {
+      saveTplBtn.addEventListener('click', saveTemplates);
+    }
+
     elements.addNotes.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') handleAddContact();
     });
@@ -307,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Validate file size (max 5MB)
-    if (file.size > RB_CONFIG.MAX_FILE_SIZE) {
+    if (file.size > RB_CONSTANTS.CONFIG.MAX_FILE_SIZE) {
       showNotification('File too large. Maximum size is 5MB.', true);
       elements.fileInput.value = '';
       return;
@@ -403,7 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
         );
         renderSearchResults(matches, data);
       });
-    }, RB_CONFIG.SEARCH_DEBOUNCE_MS);
+    }, RB_CONSTANTS.CONFIG.SEARCH_DEBOUNCE_MS);
   }
 
   // --- Logic ---

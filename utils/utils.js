@@ -39,7 +39,7 @@ const RB_UTILS = {
      * Checks if URL is a supported job board
      */
     isSupportedUrl(url) {
-        return RB_CONFIG.SUPPORTED_SITES.some(pattern => url.startsWith(pattern));
+        return RB_CONSTANTS.CONFIG.SUPPORTED_SITES.some(pattern => url.startsWith(pattern));
     },
 
     /**

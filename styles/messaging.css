@@ -1,0 +1,92 @@
+/* Referral Bro - Messaging Overlay Styles */
+
+/* Container for the pill/bar */
+.rb-overlay-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 16px; /* Pill shape */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Fira Sans", Ubuntu, Oxygen, "Oxygen Sans", Cantarell, "Droid Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Lucida Grande", Helvetica, Arial, sans-serif;
+    z-index: 9999;
+    
+    /* Absolute positioning to float above the editor */
+    position: absolute;
+    bottom: 50px; /* Just above the text area icons */
+    left: 10px;
+    width: fit-content;
+    height: 32px;
+}
+
+/* Ghost Buttons (referencing LinkedIn's Artdeco tertiary feel) */
+.rb-overlay-btn {
+    background: none;
+    border: none;
+    color: #0a66c2; /* LinkedIn Blue */
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: background-color 0.2s;
+}
+
+.rb-overlay-btn:hover {
+    background-color: #ebf4fd; /* Light blue hover */
+    text-decoration: none;
+}
+
+.rb-overlay-btn .icon {
+    font-size: 16px;
+}
+
+/* Close "X" Button */
+.rb-close-btn {
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 16px;
+    cursor: pointer;
+    margin-left: 8px;
+    padding: 2px 6px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rb-close-btn:hover {
+    background-color: #f3f3f3;
+    color: #333;
+}
+
+/* Restore "..." Icon (Floating) */
+.rb-restore-btn {
+    position: absolute;
+    bottom: 10px;
+    right: 10px; /* Adjust via JS */
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 998;
+    color: #666;
+    font-weight: bold;
+}
+
+.rb-restore-btn:hover {
+    background-color: #f9f9f9;
+    color: #0a66c2;
+}

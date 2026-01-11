@@ -18,11 +18,13 @@
 
 ---
 
-## v1.2 - Messaging Templates
-- [ ] **Custom DM Template**: Create personalized referral request message
-- [ ] **Copy Message Button**: One-click copy in the tooltip on job listings
-- [ ] **Template Variables**: Auto-insert `{name}`, `{company}`, `{role}` placeholders
-- [ ] **Multiple Templates**: Save different templates for different situations
+## v1.2 - Messaging Templates (Released) ✅
+- [x] **Custom DM Template**: Create personalized referral request message
+- [x] **Direct Insertion**: Insert message directly into LinkedIn chat
+- [x] **Template Variables**: Auto-insert `[HR Name]`, `[Company Name]`, `[Position]`
+- [x] **Multiple Templates**: Saved templates for "Referral" and "Interview" requests
+- [x] **Overlay UI**: "Ask Referral" buttons directly in the easy-access overlay
+
 
 ---
 

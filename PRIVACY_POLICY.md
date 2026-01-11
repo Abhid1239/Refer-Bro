@@ -43,9 +43,17 @@ All data is stored using Chrome's local storage API (`chrome.storage.local`) and
 
 | Permission | Purpose |
 |------------|---------|
-| `storage` | Save your contact list locally in Chrome's storage |
+| `storage` | Save your contact list and templates locally |
+| `content_scripts` | Scan job pages for company names and inject helper buttons |
 
-We request **only one permission** — the minimum needed for functionality.
+We request **minimal permissions**. Use of `content_scripts` is limited strictly to the supported job domains (LinkedIn, etc.).
+
+### Messaging Feature Privacy
+The "Ask Referral" feature inserts text directly into the message input field on your behalf.
+- ❌ We do **not** read your private messages.
+- ❌ We do **not** send any message content to our servers.
+- ✅ Template text generation happens locally.
+
 
 ---
 
