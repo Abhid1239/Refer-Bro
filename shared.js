@@ -17,7 +17,7 @@ const RB_CONFIG = {
     INJECTED_ATTR: 'data-rr-injected',
 
     // Performance
-    DEBOUNCE_MS: 800,
+    DEBOUNCE_MS: 300,  // Reduced for faster SPA detection
     SEARCH_DEBOUNCE_MS: 300,
     MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
 
@@ -37,21 +37,33 @@ const RB_CONFIG = {
     ],
 
     // Site-specific selectors for company name detection
+    // NOTE: LinkedIn uses atomic CSS with obfuscated class names now
+    // We rely on generic tags + text length filtering (2-50 chars) to detect company names
     COMPANY_SELECTORS: [
-        // Generic
-        'h1', 'h2', 'h3', 'h4', 'h5', 'a', 'strong',
+        // Generic tags that commonly contain company names
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'a', 'strong', 'b', 'span', 'p',
         '.company-name', '[class*="company"]',
-        // LinkedIn
+
+        // LinkedIn (new atomic CSS UI + legacy selectors)
         '.job-card-container__company-name',
         '.jobs-unified-top-card__company-name',
+        '.job-details-jobs-unified-top-card__company-name',
+        '.jobs-company-name',
+        '[data-view-name="job-card"] p',
+        '[data-view-name="jobs-unified-top-card"] p',
+
         // Naukri  
-        '.comp-name', '.companyInfo',
+        '.comp-name', '.companyInfo', '.cname',
+
         // Indeed
         '[data-testid="company-name"]', '.companyName', '.company',
         '.jobsearch-CompanyInfoContainer', '.companyOverviewLink',
+
         // Glassdoor
         '[data-test="employer-short-name"]', '.EmployerProfile__employerName',
         '.job-search-key-l2rwgq', '.css-l2wkq4',
+
         // Wellfound
         '.company-link', '[class*="CompanyName"]'
     ]
