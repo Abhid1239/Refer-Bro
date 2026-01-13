@@ -248,6 +248,9 @@ function scanPage() {
         const badgedContainers = new Set();
 
         candidates.forEach(node => {
+            // 0. Skip our own injected elements (prevent infinite loop)
+            if (node.closest(`.${RB_CONFIG.BADGE_CLASS}`)) return;
+
             // 1. Skip if already has a valid badge
             if (hasValidBadge(node)) return;
             if (RB_CONFIG.IGNORE_TAGS.includes(node.tagName)) return;
@@ -260,16 +263,49 @@ function scanPage() {
             // 3. Quick filters (Length check)
             if (!rawText || rawText.length < 2 || rawText.length > 50) return;
 
-            // 4. Skip hashtags and accessibility patterns
+            // 4. Skip URLs (e.g., go.atlassian.com)
+            if (rawText.includes('.com') || rawText.includes('.org') ||
+                rawText.includes('.io') || rawText.includes('http')) return;
+
+            // 5. Skip hashtags and accessibility patterns
             if (rawText.startsWith('#')) return;  // Skip hashtags like #Atlassian
             if (rawText.startsWith('View page for')) return;  // LinkedIn accessibility text
             if (rawText.startsWith('See more about')) return;
 
-            // 5. Container deduplication - only one badge per result card/container
+            // 6. Skip common description phrases (not standalone company names)
+            const lowerText = rawText.toLowerCase();
+            if (lowerText.startsWith('working at ')) return;
+            if (lowerText.startsWith('about ')) return;
+            if (lowerText.startsWith('join ')) return;
+            if (lowerText.startsWith('at ') && rawText.length > 20) return;
+
+            // 7. Skip if text has too many words (likely a sentence/paragraph)
+            const wordCount = rawText.split(/\s+/).length;
+            if (wordCount > 8) return;  // Allow "Company • City, State, Country (Remote)"
+
+            // 8. Skip if parent element has too much text (we're inside a paragraph)
+            const parentText = node.parentElement?.textContent?.trim() || '';
+            if (parentText.length > 100) return;  // Parent has long text = we're in a description
+
+            // 9. Skip elements inside search result summaries or description containers
+            if (isInsideDescriptionContainer(node)) return;
+
+            // 10. Skip product name patterns like "Atlassian Jira", "Google Cloud"
+            // These aren't standalone company names worth badging
+            if (wordCount >= 2 && !rawText.includes('•') && !rawText.includes(',')) {
+                // If it's 2+ words without location separator, likely a product name
+                const words = rawText.split(/\s+/);
+                const secondWord = words[1]?.toLowerCase() || '';
+                // Common product/sub-brand indicators
+                const productKeywords = ['jira', 'cloud', 'aws', 'azure', 'studio', 'labs', 'platform', 'pro', 'plus', 'enterprise'];
+                if (productKeywords.includes(secondWord)) return;
+            }
+
+            // 11. Container deduplication - only one badge per result card/container
             const container = findResultContainer(node);
             if (container && badgedContainers.has(container)) return;
 
-            // 6. Normalize Text
+            // 9. Normalize Text
             const cleanText = rawText.replace(RB_CONFIG.CLEAN_REGEX, '').trim().toUpperCase();
 
             // 7. Checking Matches
@@ -368,6 +404,42 @@ function isHiddenElement(node) {
         }
         if (parent.getAttribute('aria-hidden') === 'true') return true;
         parent = parent.parentElement;
+        depth++;
+    }
+
+    return false;
+}
+
+/**
+ * Checks if an element is inside a description/summary container.
+ * These are places like search result snippets, bios, posts where
+ * we don't want to show badges (too noisy).
+ */
+function isInsideDescriptionContainer(node) {
+    // Classes that indicate description/summary containers
+    const descriptionContainers = [
+        'entity-result__summary',    // LinkedIn search result summary
+        'break-words',               // LinkedIn bio/post text
+        'feed-shared-text',          // LinkedIn feed post
+        'update-components-text',    // LinkedIn update text
+        'jobs-description',          // Job description section
+        'jobs-box__html-content',    // Job description HTML
+        'pv-shared-text-with-see-more', // Profile about section
+        'inline-show-more-text'      // Expandable text containers
+    ];
+
+    let current = node.parentElement;
+    let depth = 0;
+    const maxDepth = 10;
+
+    while (current && depth < maxDepth) {
+        const className = current.className || '';
+        if (typeof className === 'string') {
+            for (const container of descriptionContainers) {
+                if (className.includes(container)) return true;
+            }
+        }
+        current = current.parentElement;
         depth++;
     }
 
@@ -636,19 +708,46 @@ function handleCopy(e) {
     const name = e.target.getAttribute('data-name');
     if (!name) return;
 
-    navigator.clipboard.writeText(name).then(() => {
-        e.target.textContent = 'Copied!';
-        e.target.classList.add('copied');
-        setTimeout(() => {
-            e.target.textContent = 'Copy Name';
-            e.target.classList.remove('copied');
-        }, 2000);
-    }).catch((err) => {
-        console.warn('[Referral Bro] Copy failed:', err.message);
-        e.target.textContent = 'Failed';
-        setTimeout(() => {
-            e.target.textContent = 'Copy Name';
-        }, 1500);
+    // Try modern Clipboard API first, fallback to execCommand
+    const copyText = async () => {
+        try {
+            await navigator.clipboard.writeText(name);
+            return true;
+        } catch (err) {
+            // Fallback: use execCommand (works even when document not focused)
+            try {
+                const textArea = document.createElement('textarea');
+                textArea.value = name;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-9999px';
+                textArea.style.top = '-9999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                const success = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                if (success) return true;
+            } catch (fallbackErr) {
+                console.warn('[Referral Bro] Fallback copy failed:', fallbackErr.message);
+            }
+            return false;
+        }
+    };
+
+    copyText().then(success => {
+        if (success) {
+            e.target.textContent = 'Copied!';
+            e.target.classList.add('copied');
+            setTimeout(() => {
+                e.target.textContent = 'Copy Name';
+                e.target.classList.remove('copied');
+            }, 2000);
+        } else {
+            e.target.textContent = 'Failed';
+            setTimeout(() => {
+                e.target.textContent = 'Copy Name';
+            }, 1500);
+        }
     });
 }
 
