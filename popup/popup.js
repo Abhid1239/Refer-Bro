@@ -282,6 +282,18 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.lastUpdatedDiv.textContent = `Last updated: ${timestamp}`;
         showNotification(`Added ${name} to ${companies.length} company(s)!`);
 
+        // Show refresh hint on button temporarily
+        const originalText = elements.addBtn.textContent;
+        elements.addBtn.textContent = '🔄 Refresh page';
+        elements.addBtn.style.background = '#057642';  // Green
+        elements.addBtn.disabled = true;
+
+        setTimeout(() => {
+          elements.addBtn.textContent = originalText;
+          elements.addBtn.style.background = '';  // Reset to CSS default
+          elements.addBtn.disabled = false;
+        }, 2000);
+
         // Clear form
         elements.addName.value = '';
         elements.addCompanies.value = '';

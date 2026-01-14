@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Referral Bro",
-  "version": "1.0",
+  "version": "1.2",
   "description": "Overlay referral contacts on job boards.",
   "permissions": [
     "storage"
