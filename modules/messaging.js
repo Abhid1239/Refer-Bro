@@ -8,24 +8,31 @@
 const MessagingModule = {
     // State
     observer: null,
-    hiddenThreads: new Set(), // IDs of threads where overlay is dismissed
+    isGloballyHidden: false, // Global visibility state (once closed, all pages show closed)
 
     init() {
         console.log('[Referral Bro] Messaging Module Initializing...');
         this.loadHiddenState();
         this.startObserver();
+        // Listen for storage changes to sync across tabs
+        chrome.storage.onChanged.addListener((changes, area) => {
+            if (area === 'local' && changes[RB_CONSTANTS.STORAGE.OVERLAY_ENABLED]) {
+                this.isGloballyHidden = !changes[RB_CONSTANTS.STORAGE.OVERLAY_ENABLED].newValue;
+                this.refreshAllContainers();
+            }
+        });
     },
 
     loadHiddenState() {
-        chrome.storage.local.get([RB_CONSTANTS.STORAGE.HIDDEN_THREADS], (result) => {
-            const stored = result[RB_CONSTANTS.STORAGE.HIDDEN_THREADS] || [];
-            this.hiddenThreads = new Set(stored);
+        chrome.storage.local.get([RB_CONSTANTS.STORAGE.OVERLAY_ENABLED], (result) => {
+            // Default to visible (true) if not set
+            this.isGloballyHidden = result[RB_CONSTANTS.STORAGE.OVERLAY_ENABLED] === false;
         });
     },
 
     saveHiddenState() {
         chrome.storage.local.set({
-            [RB_CONSTANTS.STORAGE.HIDDEN_THREADS]: Array.from(this.hiddenThreads)
+            [RB_CONSTANTS.STORAGE.OVERLAY_ENABLED]: !this.isGloballyHidden
         });
     },
 
@@ -55,15 +62,30 @@ const MessagingModule = {
             // Generate a unique ID for this conversation (using recipient name if possible)
             const threadId = this.getThreadId(container);
 
-            if (!container.dataset.rbInjected) {
-                container.dataset.rbInjected = 'true';
+            // Already injected - but check if state changed
+            if (container.dataset.rbInjected) {
+                // Re-check global state to ensure consistency
+                const hasOverlay = container.querySelector(`.${RB_CONSTANTS.UI.OVERLAY_CONTAINER}`);
+                const hasRestore = container.querySelector('.rb-restore-btn');
 
-                // Decide whether to show Overlay or Restore Button
-                if (this.hiddenThreads.has(threadId)) {
+                // State mismatch - fix it
+                if (this.isGloballyHidden && hasOverlay) {
+                    hasOverlay.remove();
                     this.injectRestoreButton(container, editor, threadId);
-                } else {
+                } else if (!this.isGloballyHidden && hasRestore) {
+                    hasRestore.remove();
                     this.injectOverlay(container, editor, threadId);
                 }
+                return;
+            }
+
+            container.dataset.rbInjected = 'true';
+
+            // Decide whether to show Overlay or Restore Button (global state)
+            if (this.isGloballyHidden) {
+                this.injectRestoreButton(container, editor, threadId);
+            } else {
+                this.injectOverlay(container, editor, threadId);
             }
         });
     },
@@ -97,15 +119,16 @@ const MessagingModule = {
         const overlay = document.createElement('div');
         overlay.className = RB_CONSTANTS.UI.OVERLAY_CONTAINER;
 
-        // 2. Add Buttons
+        // 2. Add Buttons with slash separator
         overlay.innerHTML = `
             <button class="rb-overlay-btn" id="rb-btn-referral">
                 <span class="icon">📄</span> Ask Referral
             </button>
+            <span class="rb-separator">|</span>
             <button class="rb-overlay-btn" id="rb-btn-interview">
                 <span class="icon">💼</span> Ask Interview
             </button>
-            <button class="rb-close-btn" title="Hide (Three-dots to restore)">×</button>
+            <button class="rb-close-btn" title="Minimize">×</button>
         `;
 
         // 3. Insert specific positioning
@@ -138,38 +161,87 @@ const MessagingModule = {
         // Prevent dupes
         if (container.querySelector('.rb-restore-btn')) return;
 
-        const restoreBtn = document.createElement('div');
-        restoreBtn.className = 'rb-restore-btn';
-        restoreBtn.innerHTML = '...';
-        restoreBtn.title = 'Show Referral Helper';
+        // Detect if this is a popup bubble or sidebar messaging
+        const isPopupBubble = !!container.closest('.msg-overlay-conversation-bubble');
 
-        // Position relative to editor
-        container.style.position = 'relative'; // Ensure container is relative
-        // We might need to adjust bottom/right in CSS or here depending on layout
+        // Find the footer toolbar to inject
+        const footer = container.querySelector('.msg-form__footer') ||
+            container.querySelector('.msg-form__left-actions') ||
+            container;
+
+        const restoreBtn = document.createElement('button');
+        restoreBtn.className = 'rb-restore-btn';
+        restoreBtn.innerHTML = '⋮'; // Vertical dots
+        restoreBtn.title = 'Show Referral Helper';
+        restoreBtn.type = 'button';
 
         restoreBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             e.stopPropagation();
             this.restoreOverlay(container, editor, threadId);
         });
 
-        container.appendChild(restoreBtn);
+        // Position differently based on context
+        if (isPopupBubble) {
+            // Popup bubble: insert after smiley (before send area)
+            const leftActions = container.querySelector('.msg-form__left-actions');
+            if (leftActions) {
+                leftActions.appendChild(restoreBtn);
+            } else {
+                footer.appendChild(restoreBtn);
+            }
+        } else {
+            // Sidebar: insert after the emoji button in footer
+            const leftActions = container.querySelector('.msg-form__left-actions');
+            if (leftActions) {
+                leftActions.appendChild(restoreBtn);
+            } else {
+                footer.appendChild(restoreBtn);
+            }
+        }
+    },
+
+    refreshAllContainers() {
+        // Re-scan all containers and update their UI based on global state
+        const editors = document.querySelectorAll(RB_CONSTANTS.SELECTORS.MESSAGE_EDITOR);
+        editors.forEach(editor => {
+            const container = editor.closest(RB_CONSTANTS.SELECTORS.MESSAGE_FORM);
+            if (!container) return;
+            const threadId = this.getThreadId(container);
+
+            // Clear existing injection state
+            delete container.dataset.rbInjected;
+            // Remove existing overlay or restore button
+            const overlay = container.querySelector(`.${RB_CONSTANTS.UI.OVERLAY_CONTAINER}`);
+            if (overlay) overlay.remove();
+            const restoreBtn = container.querySelector('.rb-restore-btn');
+            if (restoreBtn) restoreBtn.remove();
+
+            // Re-inject based on current global state
+            container.dataset.rbInjected = 'true';
+            if (this.isGloballyHidden) {
+                this.injectRestoreButton(container, editor, threadId);
+            } else {
+                this.injectOverlay(container, editor, threadId);
+            }
+        });
     },
 
     dismissOverlay(container, overlay, editor, threadId) {
         overlay.remove();
-        this.hiddenThreads.add(threadId);
+        this.isGloballyHidden = true;
         this.saveHiddenState();
-        this.injectRestoreButton(container, editor, threadId);
-        console.log(`[Referral Bro] Dismissed overlay for thread: ${threadId}`);
+        // Refresh all containers to show minimized state
+        this.refreshAllContainers();
+        console.log('[Referral Bro] Globally dismissed overlay');
     },
 
     restoreOverlay(container, editor, threadId) {
-        const restoreBtn = container.querySelector('.rb-restore-btn');
-        if (restoreBtn) restoreBtn.remove();
-
-        this.hiddenThreads.delete(threadId);
+        this.isGloballyHidden = false;
         this.saveHiddenState();
-        this.injectOverlay(container, editor, threadId);
+        // Refresh all containers to show expanded state
+        this.refreshAllContainers();
+        console.log('[Referral Bro] Globally restored overlay');
     },
 
     handleAction(type, editor, container) {

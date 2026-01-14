@@ -4,14 +4,14 @@
 .rb-overlay-container {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px; /* Reduced gap for tighter pill */
     padding: 6px 12px;
     background-color: #fff;
     border: 1px solid #e0e0e0;
     border-radius: 16px; /* Pill shape */
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Fira Sans", Ubuntu, Oxygen, "Oxygen Sans", Cantarell, "Droid Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Lucida Grande", Helvetica, Arial, sans-serif;
-    z-index: 9999;
+    z-index: 100; /* Lower than LinkedIn's overlays */
     
     /* Absolute positioning to float above the editor */
     position: absolute;
@@ -19,6 +19,28 @@
     left: 10px;
     width: fit-content;
     height: 32px;
+    
+    /* Entry animation */
+    animation: rb-slide-in 0.3s ease-out;
+}
+
+@keyframes rb-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Pipe separator between buttons */
+.rb-separator {
+    color: #999;
+    font-size: 14px;
+    font-weight: 400;
+    user-select: none;
 }
 
 /* Ghost Buttons (referencing LinkedIn's Artdeco tertiary feel) */
@@ -34,12 +56,18 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    transition: background-color 0.2s;
+    transition: all 0.15s ease;
 }
 
 .rb-overlay-btn:hover {
     background-color: #ebf4fd; /* Light blue hover */
     text-decoration: none;
+}
+
+/* Click animation */
+.rb-overlay-btn:active {
+    transform: scale(0.95);
+    background-color: #d0e8ff;
 }
 
 .rb-overlay-btn .icon {
@@ -59,6 +87,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.15s ease;
 }
 
 .rb-close-btn:hover {
@@ -66,27 +95,42 @@
     color: #333;
 }
 
-/* Restore "..." Icon (Floating) */
+.rb-close-btn:active {
+    transform: scale(0.9);
+}
+
+/* Restore button - Vertical dots in circle */
 .rb-restore-btn {
-    position: absolute;
-    bottom: 10px;
-    right: 10px; /* Adjust via JS */
     background: #fff;
     border: 1px solid #e0e0e0;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     border-radius: 50%;
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #666;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    z-index: 998;
-    color: #666;
-    font-weight: bold;
+    transition: all 0.15s ease;
+    animation: rb-fade-in 0.2s ease-out;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-left: 4px;
+}
+
+@keyframes rb-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .rb-restore-btn:hover {
-    background-color: #f9f9f9;
+    background-color: #f3f3f3;
     color: #0a66c2;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
 }
+
+.rb-restore-btn:active {
+    transform: scale(0.95);
+}
+
