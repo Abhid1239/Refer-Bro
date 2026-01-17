@@ -56,7 +56,7 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    transition: all 0.15s ease;
+    transition: background-color 0.15s ease, transform 0.15s ease;
 }
 
 .rb-overlay-btn:hover {
@@ -87,7 +87,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.15s ease;
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
 .rb-close-btn:hover {
@@ -113,7 +113,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.15s ease;
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
     animation: rb-fade-in 0.2s ease-out;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     margin-left: 4px;
